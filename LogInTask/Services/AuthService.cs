@@ -1,5 +1,6 @@
 ﻿using LogInTask.Models;
 using System.Text.RegularExpressions;
+using BCrypt.Net;
 
 namespace LogInTask.Services
 {
@@ -7,11 +8,10 @@ namespace LogInTask.Services
     {
         private  List<User> _users = new()
         {
-            new User { Username = "admin", Password = "admin123", Email = "admin@example.com", IsOtpEnabled = true, StaticOtp = "123456", IsActive = true },
-            new User { Username = "user", Password = "user123", Email = "user@example.com", IsOtpEnabled = false, StaticOtp = null, IsActive = true },
-            new User { Username = "testuser", Password = "test123", Email = "test@example.com", IsOtpEnabled = true, StaticOtp = "654321", IsActive = true },
-            new User { Username = "iuser", Password = "123", Email = "iuser@example.com", IsOtpEnabled = true, StaticOtp = "654321", IsActive = false }
-
+            new User { Username = "admin", Password = "$2a$12$examplehashforadmin123", Email = "admin@example.com", IsOtpEnabled = true, StaticOtp = "123456", IsActive = true },  // Hash for "admin123"
+            new User { Username = "user", Password = "$2a$12$examplehashforuser123", Email = "user@example.com", IsOtpEnabled = false, StaticOtp = null, IsActive = true },  // Hash for "user123"
+            new User { Username = "testuser", Password = "$2a$12$examplehashfortest123", Email = "test@example.com", IsOtpEnabled = true, StaticOtp = "654321", IsActive = true },  // Hash for "test123"
+            new User { Username = "iuser", Password = "$2a$12$examplehashfor123", Email = "iuser@example.com", IsOtpEnabled = true, StaticOtp = "654321", IsActive = false }  // Hash for "123"
         };
 
         private static Regex EmailRegex = new(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
@@ -36,7 +36,7 @@ namespace LogInTask.Services
             if(!user.IsActive)
                 return (false, "❌ User inactive.");
 
-            if (user.Password != password)
+            if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
                 return (false, "❌ Invalid password.");
 
             if (user.IsOtpEnabled)
