@@ -1,6 +1,5 @@
 ﻿using LogInTask.Models;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace LogInTask.Services
 {
@@ -15,11 +14,22 @@ namespace LogInTask.Services
 
         };
 
-        public async Task<(bool success, string message)> LoginAsync(string username, string password, string otp = null)
+        private static Regex EmailRegex = new(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+
+        public async Task<(bool success, string message)> LoginAsync(string identifier, string password, string otp = null)
         {
             await Task.Delay(200);
 
-            var user = GetUserByUsername(username);
+            User? user;
+
+            if (EmailRegex.IsMatch(identifier))  
+            {
+                user = GetUserByEmail(identifier);
+            }
+            else  
+            {
+                user = GetUserByUsername(identifier);
+            }
 
             if (user == null)
                 return (false, "❌ User not found.");
@@ -45,6 +55,12 @@ namespace LogInTask.Services
             var user = _users.FirstOrDefault(u =>
                 u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
 
+            return user ?? throw new InvalidOperationException("User not found.");
+        }
+        public User GetUserByEmail(string email)
+        {
+            var user = _users.FirstOrDefault(u =>
+                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
             return user ?? throw new InvalidOperationException("User not found.");
         }
     }

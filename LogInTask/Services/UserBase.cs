@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using LogInTask.Services;
+using System.Text.RegularExpressions;
 
 namespace LogInTask.Models
 {
@@ -18,7 +19,7 @@ namespace LogInTask.Models
         protected string errorMessage = string.Empty;
         protected string successMessage = string.Empty;
         protected User? currentUser;
-
+        private static  Regex EmailRegex = new(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
         protected async Task HandleLogin()
         {
             errorMessage = string.Empty;
@@ -33,7 +34,14 @@ namespace LogInTask.Models
             {
                 if (message == "OTP required")
                 {
-                    currentUser = AuthService.GetUserByUsername(loginModel.Username);
+                    if (EmailRegex.IsMatch(loginModel.Username))
+                    {
+                        currentUser = AuthService.GetUserByEmail(loginModel.Username);
+                    }
+                    else
+                    {
+                        currentUser = AuthService.GetUserByUsername(loginModel.Username);
+                    }
                     showOtpForm = true;
                     successMessage = $"Credentials verified! OTP has been sent. (Use code: {currentUser?.StaticOtp})";
                 }
@@ -44,7 +52,14 @@ namespace LogInTask.Models
             }
             else
             {
-                currentUser = AuthService.GetUserByUsername(loginModel.Username);
+                if (EmailRegex.IsMatch(loginModel.Username))
+                {
+                    currentUser = AuthService.GetUserByEmail(loginModel.Username);
+                }
+                else
+                {
+                    currentUser = AuthService.GetUserByUsername(loginModel.Username);
+                }
                 successMessage = $"Welcome back, {currentUser?.Username}! Login successful.";
                 await Task.Delay(1500);
                 Navigation.NavigateTo("/home");
@@ -65,7 +80,14 @@ namespace LogInTask.Models
 
             if (success)
             {
-                currentUser = AuthService.GetUserByUsername(loginModel.Username);
+                if (EmailRegex.IsMatch(loginModel.Username))
+                {
+                    currentUser = AuthService.GetUserByEmail(loginModel.Username);
+                }
+                else
+                {
+                    currentUser = AuthService.GetUserByUsername(loginModel.Username);
+                }
                 successMessage = $"OTP verified! Welcome back, {currentUser.Username}!";
                 await Task.Delay(1500);
                 Navigation.NavigateTo("/home");
