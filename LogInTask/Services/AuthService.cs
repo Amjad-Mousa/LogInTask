@@ -50,18 +50,17 @@ namespace LogInTask.Services
             return (true, "✅ Login successful!");
         }
 
-        public User GetUserByUsername(string username)
+        public User? GetUserByUsername(string username)
         {
-            var user = _users.FirstOrDefault(u =>
+            return _users.FirstOrDefault(u =>
                 u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
 
-            return user ?? throw new InvalidOperationException("User not found.");
         }
-        public User GetUserByEmail(string email)
+        public User? GetUserByEmail(string email)
         {
-            var user = _users.FirstOrDefault(u =>
+            return _users.FirstOrDefault(u =>
                 u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-            return user ?? throw new InvalidOperationException("User not found.");
+            
         }
     }
 }

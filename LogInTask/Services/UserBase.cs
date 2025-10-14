@@ -42,7 +42,14 @@ namespace LogInTask.Models
                     {
                         currentUser = AuthService.GetUserByUsername(loginModel.Username);
                     }
-                    showOtpForm = true;
+                
+                if (currentUser == null)  
+                {
+                    errorMessage = "User not found after credentials check.";
+                    isLoading = false;
+                    return;
+                }
+                showOtpForm = true;
                     successMessage = $"Credentials verified! OTP has been sent. (Use code: {currentUser?.StaticOtp})";
                 }
                 else
@@ -59,6 +66,13 @@ namespace LogInTask.Models
                 else
                 {
                     currentUser = AuthService.GetUserByUsername(loginModel.Username);
+                }
+
+                if (currentUser == null)  
+                {
+                    errorMessage = "User not found after login success.";
+                    isLoading = false;
+                    return;
                 }
                 successMessage = $"Welcome back, {currentUser?.Username}! Login successful.";
                 await Task.Delay(1500);
@@ -88,6 +102,14 @@ namespace LogInTask.Models
                 {
                     currentUser = AuthService.GetUserByUsername(loginModel.Username);
                 }
+
+                if (currentUser == null) 
+                {
+                    errorMessage = "User not found after OTP verification.";
+                    isLoading = false;
+                    return;
+                }
+
                 successMessage = $"OTP verified! Welcome back, {currentUser.Username}!";
                 await Task.Delay(1500);
                 Navigation.NavigateTo("/home");
