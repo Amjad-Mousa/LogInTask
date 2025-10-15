@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using LogInTask.Models;
 using LogInTask.Services;
 using System.Text.RegularExpressions;
 
@@ -19,7 +20,9 @@ namespace LogInTask.Models
         protected string errorMessage = string.Empty;
         protected string successMessage = string.Empty;
         protected User? currentUser;
+
         private static readonly Regex EmailRegex = new(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+
         protected async Task HandleLogin()
         {
             errorMessage = string.Empty;
@@ -50,7 +53,7 @@ namespace LogInTask.Models
                         return;
                     }
                     showOtpForm = true;
-                    successMessage = $"Credentials verified! OTP has been sent. (Use code: {currentUser?.StaticOtp})";
+                    successMessage = $"Credentials verified! OTP has been sent. (Use code: {currentUser.StaticOtp})";
                 }
                 else
                 {
@@ -74,7 +77,7 @@ namespace LogInTask.Models
                     isLoading = false;
                     return;
                 }
-                successMessage = $"Welcome back, {currentUser?.Username}! Login successful.";
+                successMessage = $"Welcome back, {currentUser.Username}! Login successful.";
                 await Task.Delay(1500);
                 Navigation.NavigateTo("/home");
             }
