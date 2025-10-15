@@ -1,7 +1,37 @@
 ﻿@page "/home"
+@inherits LayoutComponentBase
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="home-page">
+    <h1>Welcome to our first task</h1>
+    <p class="home-description">
+        In this task, we created a <strong>Blazor Login Screen</strong> with static user data and OTP functionality.
+        Users can log in with their username/email and password. If OTP is enabled for the user, they are prompted
+        to enter a predefined static OTP. The application handles active/inactive users and shows proper
+        success or error messages.
+    </p>
 
-Welcome to your new app.
+    <h2>Task Summary</h2>
+    <ul class="task-summary">
+        <li><strong>User Model:</strong> Static user class with Username, Password, Email, IsOtpEnabled, StaticOtp, IsActive.</li>
+        <li><strong>Login Component:</strong> Input fields for username/email and password, login button, error display, OTP validation if enabled.</li>
+        <li><strong>Business Logic:</strong> Validate credentials, handle OTP if enabled, show appropriate messages.</li>
+        <li><strong>Static Users:</strong> Three sample users - one with OTP disabled, one with OTP enabled, one inactive.</li>
+        <li><strong>Bonus:</strong> Password hashing, logout feature, responsive and visually appealing UI.</li>
+    </ul>
+
+    <h2>Project Structure</h2>
+    <pre class="project-structure">
+LoginTask/
+├── Models/
+│   └── User.cs
+├── Services/
+│   └── IAuthService.cs
+│   └── AuthService.cs
+├── Components/
+│   └── Login.razor
+└── Pages/
+    └── Home.razor (protected page)
+    </pre>
+</div>
