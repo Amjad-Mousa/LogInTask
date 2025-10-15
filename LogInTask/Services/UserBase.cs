@@ -9,7 +9,7 @@ namespace LogInTask.Models
         [Inject]
         protected NavigationManager Navigation { get; set; } = default!;
 
-        [Inject]    
+        [Inject]
         protected IAuthService AuthService { get; set; } = default!;
 
         protected LoginModel loginModel = new();
@@ -19,7 +19,7 @@ namespace LogInTask.Models
         protected string errorMessage = string.Empty;
         protected string successMessage = string.Empty;
         protected User? currentUser;
-        private static  Regex EmailRegex = new(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+        private static readonly Regex EmailRegex = new(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
         protected async Task HandleLogin()
         {
             errorMessage = string.Empty;
@@ -42,14 +42,14 @@ namespace LogInTask.Models
                     {
                         currentUser = AuthService.GetUserByUsername(loginModel.Username);
                     }
-                
-                if (currentUser == null)  
-                {
-                    errorMessage = "User not found after credentials check.";
-                    isLoading = false;
-                    return;
-                }
-                showOtpForm = true;
+
+                    if (currentUser == null)
+                    {
+                        errorMessage = "User not found after credentials check.";
+                        isLoading = false;
+                        return;
+                    }
+                    showOtpForm = true;
                     successMessage = $"Credentials verified! OTP has been sent. (Use code: {currentUser?.StaticOtp})";
                 }
                 else
@@ -68,7 +68,7 @@ namespace LogInTask.Models
                     currentUser = AuthService.GetUserByUsername(loginModel.Username);
                 }
 
-                if (currentUser == null)  
+                if (currentUser == null)
                 {
                     errorMessage = "User not found after login success.";
                     isLoading = false;
@@ -103,7 +103,7 @@ namespace LogInTask.Models
                     currentUser = AuthService.GetUserByUsername(loginModel.Username);
                 }
 
-                if (currentUser == null) 
+                if (currentUser == null)
                 {
                     errorMessage = "User not found after OTP verification.";
                     isLoading = false;
