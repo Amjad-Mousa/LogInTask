@@ -20,6 +20,8 @@ namespace LogInTask.Models
         protected string errorMessage = string.Empty;
         protected string successMessage = string.Empty;
         protected User? currentUser;
+        protected bool loggedIn = false;
+
 
         private static readonly Regex EmailRegex = new(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
 
@@ -90,6 +92,7 @@ namespace LogInTask.Models
             errorMessage = string.Empty;
             successMessage = string.Empty;
             isLoading = true;
+
 
             await Task.Delay(500);
 

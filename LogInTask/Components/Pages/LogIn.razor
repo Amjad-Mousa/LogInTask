@@ -9,8 +9,8 @@
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
-            <h2>Welcome Back</h2>
-            <p>Please log in to continue</p>
+            <h2>مرحباً بعودتك</h2>
+            <p>الرجاء تسجيل الدخول للمتابعة</p>
         </div>
 
         @if (!showOtpForm)
@@ -19,14 +19,14 @@
                 <DataAnnotationsValidator />
 
                 <div class="form-group">
-                    <label for="username">Username or Email</label>
-                    <InputText id="username" @bind-Value="loginModel.Username" class="form-control" placeholder="Enter your username or email" />
+                    <label for="username">اسم المستخدم أو البريد الإلكتروني</label>
+                    <InputText id="username" @bind-Value="loginModel.Username" class="form-control" placeholder="أدخل اسم المستخدم أو البريد الإلكتروني" />
                     <ValidationMessage For="@(() => loginModel.Username)" />
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <InputText id="password" type="password" @bind-Value="loginModel.Password" class="form-control" placeholder="Enter your password" />
+                    <label for="password">كلمة المرور</label>
+                    <InputText id="password" type="password" @bind-Value="loginModel.Password" class="form-control" placeholder="أدخل كلمة المرور" />
                     <ValidationMessage For="@(() => loginModel.Password)" />
                 </div>
 
@@ -42,11 +42,11 @@
                     @if (isLoading)
                     {
                         <span class="spinner"></span>
-                        <span>Logging In...</span>
+                        <span>جاري تسجيل الدخول...</span>
                     }
                     else
                     {
-                        <span>Log In</span>
+                        <span>تسجيل الدخول</span>
                     }
                 </button>
             </EditForm>
@@ -58,13 +58,13 @@
 
                 <div class="otp-info">
                     <div class="otp-icon">🔐</div>
-                    <h3>Two-Factor Authentication</h3>
-                    <p>Enter the OTP code to complete your login</p>
+                    <h3>المصادقة الثنائية</h3>
+                    <p>أدخل رمز التحقق لإكمال تسجيل الدخول</p>
                 </div>
 
                 <div class="form-group">
-                    <label for="otp">OTP Code</label>
-                    <InputText id="otp" @bind-Value="otpModel.OtpCode" class="form-control otp-input" placeholder="Enter 6-digit code" maxlength="6" />
+                    <label for="otp">رمز التحقق</label>
+                    <InputText id="otp" @bind-Value="otpModel.OtpCode" class="form-control otp-input" placeholder="أدخل الرمز المكون من 6 أرقام" maxlength="6" />
                     <ValidationMessage For="@(() => otpModel.OtpCode)" />
                 </div>
 
@@ -89,15 +89,15 @@
                         @if (isLoading)
                         {
                             <span class="spinner"></span>
-                            <span>Verifying...</span>
+                            <span>جاري التحقق...</span>
                         }
                         else
                         {
-                            <span>Verify OTP</span>
+                            <span>تحقق من الرمز</span>
                         }
                     </button>
                     <button type="button" class="btn-back" @onclick="BackToLogin">
-                        ← Back to Login
+                        ← العودة لتسجيل الدخول
                     </button>
                 </div>
             </EditForm>
