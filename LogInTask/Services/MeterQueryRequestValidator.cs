@@ -1,32 +1,36 @@
-﻿using LogInTask.Models;
+﻿using FluentValidation;
+using LogInTask.Models;
+using System.Text.RegularExpressions;
 
-namespace LogInTask.Services
+namespace ElectricMeterApp.Validators
 {
-    public class MeterQueryRequestValidator
+    public class MeterQueryRequestValidator : AbstractValidator<MeterQueryRequest>
     {
-        private readonly MeterQueryRequest? _mterQueryRequest;
-
-        public MeterQueryRequestValidator(MeterQueryRequest? mterQueryRequest)
+        public MeterQueryRequestValidator()
         {
-            _mterQueryRequest = mterQueryRequest;
+            RuleFor(x => x.MeterNo)
+                .NotEmpty().WithMessage("Meter number is required.")
+                .Must(BeDigitsOnly).WithMessage("Meter number must contain digits only.")
+                .Must(BeValidLength).WithMessage("Meter number must be exactly 11 or 13 digits.");
+
+            RuleFor(x => x.Amount).NotEmpty()
+                .WithMessage("Amount is required.")
+                .GreaterThanOrEqualTo(20)
+                .LessThanOrEqualTo(500)
+                .WithMessage("Amount must be between 20 and 500."); 
+
         }
 
-        public void MeterNoValidator()
+        private bool BeDigitsOnly(string? s)
         {
-            if (_mterQueryRequest == null || string.IsNullOrEmpty(_mterQueryRequest.MeterNo))
-            {
-                throw new ArgumentException("Meter number is required.");
-            }
+            if (string.IsNullOrEmpty(s)) return false;
+            return Regex.IsMatch(s, @"^\d+$");
+        }
 
-            if (_mterQueryRequest.MeterNo.Length != 11 && _mterQueryRequest.MeterNo.Length != 13)
-            {
-                throw new ArgumentException("Meter number must be exactly 11 or 13 digits.");
-            }
-
-            if (_mterQueryRequest.Amount < 20 || _mterQueryRequest.Amount > 500)
-            {
-                throw new ArgumentException("Amount must be between 20 and 500.");
-            }
+        private bool BeValidLength(string? s)
+        {
+            if (string.IsNullOrEmpty(s)) return false;
+            return s.Length == 11 || s.Length == 13;
         }
     }
 }
