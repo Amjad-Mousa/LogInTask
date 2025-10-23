@@ -4,21 +4,22 @@ using System.Text.RegularExpressions;
 
 namespace ElectricMeterApp.Validators
 {
+    using FluentValidation;
+    using LogInTask.Models;
+    using System.Text.RegularExpressions;
+
     public class MeterQueryRequestValidator : AbstractValidator<MeterQueryRequest>
     {
         public MeterQueryRequestValidator()
         {
             RuleFor(x => x.MeterNo)
-                .NotEmpty().WithMessage("Meter number is required.")
-                .Must(BeDigitsOnly).WithMessage("Meter number must contain digits only.")
-                .Must(BeValidLength).WithMessage("Meter number must be exactly 11 or 13 digits.");
+                .NotEmpty().WithMessage("رقم العداد مطلوب.")
+                .Must(BeDigitsOnly).WithMessage("رقم العداد يجب أن يحتوي على أرقام فقط.")
+                .Must(BeValidLength).WithMessage("رقم العداد يجب أن يكون 11 أو 13 رقمًا.");
 
-            RuleFor(x => x.Amount).NotEmpty()
-                .WithMessage("Amount is required.")
-                .GreaterThanOrEqualTo(20)
-                .LessThanOrEqualTo(500)
-                .WithMessage("Amount must be between 20 and 500."); 
-
+            RuleFor(x => x.Amount)
+                .NotEmpty().WithMessage("المبلغ مطلوب.")
+                .InclusiveBetween(20, 500).WithMessage("المبلغ يجب أن يكون بين 20 و 500.");
         }
 
         private bool BeDigitsOnly(string? s)
@@ -33,4 +34,5 @@ namespace ElectricMeterApp.Validators
             return s.Length == 11 || s.Length == 13;
         }
     }
+
 }

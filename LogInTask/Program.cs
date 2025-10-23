@@ -7,23 +7,18 @@ using LogInTask.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ? Add Razor Components (Blazor Server)
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// ? Register your services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IElectricMeterService, ElectricMeterService>();
 
-// ? Register FluentValidation validator
 builder.Services.AddScoped<IValidator<MeterQueryRequest>, MeterQueryRequestValidator>();
 
-// ? Register HttpClient (optional)
 builder.Services.AddScoped<HttpClient>();
 
 var app = builder.Build();
 
-// ? Middleware setup
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);

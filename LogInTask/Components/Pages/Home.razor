@@ -30,7 +30,7 @@
                 <label class="form-label">المبلغ (20 - 500)</label>
                 <input class="form-control text-end"
                        type="number"
-                       step="0.01"
+                       step="20"
                        min="20"
                        max="500"
                        @bind="Request.Amount" />
@@ -207,7 +207,7 @@
                 else if (e.PropertyName == nameof(Request.Amount))
                     AmountError = e.ErrorMessage;
                 else
-                    FormError = e.ErrorMessage;
+                    FormError = "يوجد خطأ في النموذج، يرجى التحقق من البيانات.";    
             }
             return;
         }
@@ -221,11 +221,11 @@
             if (LastQueryResults?.Success == true)
                 await AddToRecent(Request);
             else
-                FormError = "فشل الاستعلام، تحقق من رقم العداد.";
+                FormError = "فشل الاستعلام، يرجى التحقق من رقم العداد.";
         }
-        catch (Exception ex)
+        catch
         {
-            FormError = $"حدث خطأ: {ex.Message}";
+            FormError = "حدث خطأ أثناء الاستعلام، يرجى المحاولة لاحقًا.";
         }
         finally
         {
@@ -238,7 +238,7 @@
         if (LastQueryResults == null)
             return;
 
-        bool confirm = await JS.InvokeAsync<bool>("confirm", $"تأكيد دفع {Request.Amount} للعداد {Request.MeterNo}؟");
+        bool confirm = await JS.InvokeAsync<bool>("confirm", $"هل تريد تأكيد دفع {Request.Amount} للعداد {Request.MeterNo}؟");
         if (!confirm)
             return;
 
@@ -251,11 +251,11 @@
             if (LastPaymentResult?.Success == true)
                 await ResetFormAfterPayment();
             else
-                FormError = "فشل الدفع، حاول مرة أخرى.";
+                FormError = "فشل الدفع، يرجى المحاولة مرة أخرى.";
         }
-        catch (Exception ex)
+        catch
         {
-            FormError = $"خطأ أثناء الدفع: {ex.Message}";
+            FormError = "حدث خطأ أثناء عملية الدفع، يرجى المحاولة لاحقًا.";
         }
         finally
         {
