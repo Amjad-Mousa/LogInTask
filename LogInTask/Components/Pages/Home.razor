@@ -1,7 +1,182 @@
 ﻿@page "/home"
+@using LogInTask.Models
+@using LogInTask.Components.Layout
+@using LogInTask.Services
+@inherits HomeBase
+@rendermode InteractiveServer
+@layout MainLayout
 
-<PageTitle>Home</PageTitle>
+<div class="page-content">
+    <h3 class="mb-3">⚡ استعلام عداد الكهرباء</h3>
 
-<h1>Hello, world!</h1>
+    <div class="card p-3 mb-3 shadow-sm">
+        <EditForm Model="@Request" OnValidSubmit="@OnSubmit">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">رقم العداد</label>
+                    <input class="form-control text-end"
+                           value="@Request.MeterNo"
+                           @oninput="OnMeterInput"
+                           maxlength="13"
+                           placeholder="أدخل 11 أو 13 رقمًا" />
+                    @if (!string.IsNullOrEmpty(MeterNoError))
+                    {
+                        <div class="text-danger small mt-1">@MeterNoError</div>
+                    }
+                </div>
 
-Welcome to your new app.
+                <div class="col-md-4">
+                    <label class="form-label">المبلغ (20 - 500)</label>
+                    <input class="form-control text-end"
+                           type="number"
+                           step="20"
+                           min="20"
+                           max="500"
+                           @bind="Request.Amount" />
+                    @if (!string.IsNullOrEmpty(AmountError))
+                    {
+                        <div class="text-danger small mt-1">@AmountError</div>
+                    }
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100"
+                            type="button"
+                            @onclick="OnSubmitClicked"
+                            disabled="@IsLoading">
+                        @if (IsLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm"></span>
+                            <span class="ms-2">جارٍ البحث...</span>
+                        }
+                        else
+                        {
+                            <span>استعلام</span>
+                        }
+                    </button>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(FormError))
+            {
+                <div class="alert alert-danger mt-3">@FormError</div>
+            }
+        </EditForm>
+    </div>
+
+    @if (LastQueryResults != null)
+    {
+        <div class="card p-3 mb-3 shadow-sm">
+            <h5>نتائج الاستعلام</h5>
+            @if (!LastQueryResults.Success)
+            {
+                <div class="alert alert-warning">فشل الاستعلام أو لا توجد بيانات.</div>
+            }
+            else
+            {
+                <table class="table table-sm">
+                    <tbody>
+                        <tr><th>الاسم</th><td>@LastQueryResults.CustomerName</td></tr>
+                        <tr><th>رقم العداد</th><td>@LastQueryResults.MeterNumber</td></tr>
+                        <tr><th>رقم الحساب</th><td>@LastQueryResults.AccountNumber</td></tr>
+                        <tr><th>الاستهلاك</th><td>@LastQueryResults.AccountUsed</td></tr>
+                        <tr><th>الخصومات</th><td>@LastQueryResults.Adjustments</td></tr>
+                        <tr><th>قيمة الشحن</th><td>@LastQueryResults.RechargeAmount</td></tr>
+                        <tr><th>مرجع الاستعلام</th><td>@LastQueryResults.QueryRef</td></tr>
+                        <tr><th>التاريخ</th><td>@LastQueryResults.Timestamp.ToLocalTime()</td></tr>
+                    </tbody>
+                </table>
+
+                @if (LastQueryResults.AdjustmentsDetails?.Any() == true)
+                {
+                    <h6 class="mt-3">تفاصيل الخصومات</h6>
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>الخصم</th>
+                                <th>المتبقي</th>
+                                <th>القيمة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in LastQueryResults.AdjustmentsDetails)
+                            {
+                                <tr>
+                                    <td>@a.AdjustmentName</td>
+                                    <td>@a.AdjustmentRemains</td>
+                                    <td>@a.AdjustmentValue</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+                <div class="d-flex gap-2 justify-content-end mt-3">
+                    <button class="btn btn-primary"
+                            @onclick="OnProcessPaymentClicked"
+                            disabled="@PaymentLoading">
+                        @if (PaymentLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm"></span>
+                            <span class="ms-2">جارٍ المعالجة...</span>
+                        }
+                        else
+                        {
+                            <span>تنفيذ الدفع</span>
+                        }
+                    </button>
+
+                    <button class="btn btn-secondary" @onclick="ResetForm">إعادة تعيين</button>
+                </div>
+            }
+        </div>
+    }
+
+    @if (LastPaymentResult != null)
+    {
+        <div class="card p-3 mb-3 shadow-sm">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5>نتيجة الدفع</h5>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="ClosePaymentResult">
+                    ✕ إغلاق
+                </button>
+            </div>
+            @if (!LastPaymentResult.Success)
+            {
+                <div class="alert alert-danger">فشل في عملية الدفع.</div>
+            }
+            else
+            {
+                <table class="table table-sm">
+                    <tbody>
+                        <tr><th>رقم العداد</th><td>@LastPaymentResult.MeterNumber</td></tr>
+                        <tr><th>الاسم</th><td>@LastPaymentResult.CustomerName</td></tr>
+                        <tr><th>المبلغ المدفوع</th><td>@LastPaymentResult.AmountPaid</td></tr>
+                        <tr><th>الوحدات المضافة</th><td>@LastPaymentResult.UnitsAdded</td></tr>
+                        <tr><th>الرمز</th><td>@LastPaymentResult.Token</td></tr>
+                        <tr><th>المرجع</th><td>@LastPaymentResult.ReferenceNumber</td></tr>
+                        <tr><th>التاريخ</th><td>@LastPaymentResult.Timestamp.ToLocalTime()</td></tr>
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+    @if (RecentQueries?.Count > 0)
+    {
+        <div class="card p-3 shadow-sm">
+            <h6>الاستعلامات الأخيرة</h6>
+            <ul class="list-group list-group-flush">
+                @foreach (var q in RecentQueries)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="flex-fill">
+                            <strong>@q.MeterNo</strong> — @q.Amount
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => LoadRecent(q)">تحميل</button>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>

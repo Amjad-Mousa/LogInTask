@@ -1,38 +1,50 @@
 ﻿using LogInTask.Models;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using BCrypt.Net;
 
 namespace LogInTask.Services
 {
     public class AuthService : IAuthService
     {
         private  List<User> _users = new()
-        {
-            new User { Username = "admin", Password = "admin123", Email = "admin@example.com", IsOtpEnabled = true, StaticOtp = "123456", IsActive = true },
-            new User { Username = "user", Password = "user123", Email = "user@example.com", IsOtpEnabled = false, StaticOtp = null, IsActive = true },
-            new User { Username = "testuser", Password = "test123", Email = "test@example.com", IsOtpEnabled = true, StaticOtp = "654321", IsActive = true },
-            new User { Username = "iuser", Password = "123", Email = "iuser@example.com", IsOtpEnabled = true, StaticOtp = "654321", IsActive = false }
+{
+    new User { Username = "john",    Email = "john@example.com", Password = BCrypt.Net.BCrypt.HashPassword("123"),  IsOtpEnabled = false, StaticOtp = null,     IsActive = true },
+    new User { Username = "jane",    Email = "jane@example.com", Password = BCrypt.Net.BCrypt.HashPassword("456"),  IsOtpEnabled = true,  StaticOtp = "000000", IsActive = true },
+    new User { Username = "inactive",Email = "inactive@example.com", Password = BCrypt.Net.BCrypt.HashPassword("000"),  IsOtpEnabled = false, StaticOtp = null,     IsActive = false }
+};
 
-        };
+        private static readonly Regex EmailRegex = new(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
 
-        public async Task<(bool success, string message)> LoginAsync(string username, string password, string otp = null)
+        public async Task<(bool success, string message)> LoginAsync(string identifier, string password, string otp = null)
         {
             await Task.Delay(200);
 
-            var user = GetUserByUsername(username);
+            User? user = null;
+            if (EmailRegex.IsMatch(identifier))
+            {
+                user = GetUserByEmail(identifier);
+            }
+            else
+            {
+                user = GetUserByUsername(identifier);
+            }
 
             if (user == null)
                 return (false, "❌ User not found.");
-            if(!user.IsActive)
+
+            if (!user.IsActive)
                 return (false, "❌ User inactive.");
 
-            if (user.Password != password)
+            if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
                 return (false, "❌ Invalid password.");
 
             if (user.IsOtpEnabled)
             {
                 if (string.IsNullOrEmpty(otp))
-                    return (false, "OTP required");  
+                    return (false, "OTP required");
+
                 if (otp != user.StaticOtp)
                     return (false, "❌ Invalid OTP.");
             }
@@ -40,12 +52,16 @@ namespace LogInTask.Services
             return (true, "✅ Login successful!");
         }
 
-        public User GetUserByUsername(string username)
+        public User? GetUserByUsername(string username)
         {
-            var user = _users.FirstOrDefault(u =>
+            return _users.FirstOrDefault(u =>
                 u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+        }
 
-            return user ?? throw new InvalidOperationException("User not found.");
+        public User? GetUserByEmail(string email)
+        {
+            return _users.FirstOrDefault(u =>
+                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

@@ -1,26 +1,38 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">LogInTask</a>
+﻿<nav class="navbar-full">
+    <div class="nav-container-full">
+        <div class="nav-brand-full">
+            <a href="/home" class="logo-full">
+                <i class="fas fa-bolt"></i>
+                <span>شحن الكهرباء</span>
+            </a>
+        </div>
+
+        <div class="nav-links-full">
+            <a href="/home" class="nav-link-full">
+                <i class="fas fa-home"></i>
+                الرئيسية
+            </a>
+            <a href="/home" class="nav-link-full">
+                <i class="fas fa-plus-circle"></i>
+                شحن الكهرباء
+            </a>
+            <a href="/search" class="nav-link-full">
+                <i class="fas fa-search"></i>
+                بحث
+            </a>
+            <a href="/profile" class="nav-link-full">
+                <i class="fas fa-user"></i>
+                الملف الشخصي
+            </a>
+        </div>
+
+        <div class="nav-user-full">
+            <a href="/" class="login-btn-full">
+                <i class="fas fa-sign-out-alt"></i>
+                تسجيل الخروج
+            </a>
+        </div>
     </div>
-</div>
+</nav>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="\home">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="\">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> LogOut
-            </NavLink>
-        </div>
-
-     
-    </nav>
-</div>
-
+<link href="css/NavMenuFullWidth.css" rel="stylesheet" />
