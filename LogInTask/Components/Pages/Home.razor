@@ -1,330 +1,182 @@
 ﻿@page "/home"
 @using LogInTask.Models
 @using LogInTask.Components.Layout
-@using FluentValidation
-@inject IElectricMeterService ElectricMeterService
-@inject IValidator<MeterQueryRequest> Validator
-@inject IJSRuntime JS
+@using LogInTask.Services
+@inherits HomeBase
 @rendermode InteractiveServer
-@layout EmptyLayout
+@layout MainLayout
 
-<h3 class="mb-3 text-end">⚡ استعلام عداد الكهرباء</h3>
+<div class="page-content">
+    <h3 class="mb-3">⚡ استعلام عداد الكهرباء</h3>
 
-<div class="card p-3 mb-3 shadow-sm text-end">
-    <EditForm Model="@Request" OnValidSubmit="@OnSubmit">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">رقم العداد</label>
-                <input class="form-control text-end"
-                       value="@Request.MeterNo"
-                       @oninput="OnMeterInput"
-                       maxlength="13"
-                       placeholder="أدخل 11 أو 13 رقمًا" />
-                @if (!string.IsNullOrEmpty(MeterNoError))
-                {
-                    <div class="text-danger small">@MeterNoError</div>
-                }
+    <div class="card p-3 mb-3 shadow-sm">
+        <EditForm Model="@Request" OnValidSubmit="@OnSubmit">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">رقم العداد</label>
+                    <input class="form-control text-end"
+                           value="@Request.MeterNo"
+                           @oninput="OnMeterInput"
+                           maxlength="13"
+                           placeholder="أدخل 11 أو 13 رقمًا" />
+                    @if (!string.IsNullOrEmpty(MeterNoError))
+                    {
+                        <div class="text-danger small mt-1">@MeterNoError</div>
+                    }
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">المبلغ (20 - 500)</label>
+                    <input class="form-control text-end"
+                           type="number"
+                           step="20"
+                           min="20"
+                           max="500"
+                           @bind="Request.Amount" />
+                    @if (!string.IsNullOrEmpty(AmountError))
+                    {
+                        <div class="text-danger small mt-1">@AmountError</div>
+                    }
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100"
+                            type="button"
+                            @onclick="OnSubmitClicked"
+                            disabled="@IsLoading">
+                        @if (IsLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm"></span>
+                            <span class="ms-2">جارٍ البحث...</span>
+                        }
+                        else
+                        {
+                            <span>استعلام</span>
+                        }
+                    </button>
+                </div>
             </div>
 
-            <div class="col-md-4">
-                <label class="form-label">المبلغ (20 - 500)</label>
-                <input class="form-control text-end"
-                       type="number"
-                       step="20"
-                       min="20"
-                       max="500"
-                       @bind="Request.Amount" />
-                @if (!string.IsNullOrEmpty(AmountError))
-                {
-                    <div class="text-danger small">@AmountError</div>
-                }
-            </div>
+            @if (!string.IsNullOrEmpty(FormError))
+            {
+                <div class="alert alert-danger mt-3">@FormError</div>
+            }
+        </EditForm>
+    </div>
 
-            <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-primary w-100"
-                        type="button"
-                        @onclick="OnSubmitClicked"
-                        disabled="@IsLoading">
-                    @if (IsLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm"></span>
-                        <span class="ms-2">جارٍ البحث...</span>
-                    }
-                    else
-                    {
-                        <span>استعلام</span>
-                    }
+    @if (LastQueryResults != null)
+    {
+        <div class="card p-3 mb-3 shadow-sm">
+            <h5>نتائج الاستعلام</h5>
+            @if (!LastQueryResults.Success)
+            {
+                <div class="alert alert-warning">فشل الاستعلام أو لا توجد بيانات.</div>
+            }
+            else
+            {
+                <table class="table table-sm">
+                    <tbody>
+                        <tr><th>الاسم</th><td>@LastQueryResults.CustomerName</td></tr>
+                        <tr><th>رقم العداد</th><td>@LastQueryResults.MeterNumber</td></tr>
+                        <tr><th>رقم الحساب</th><td>@LastQueryResults.AccountNumber</td></tr>
+                        <tr><th>الاستهلاك</th><td>@LastQueryResults.AccountUsed</td></tr>
+                        <tr><th>الخصومات</th><td>@LastQueryResults.Adjustments</td></tr>
+                        <tr><th>قيمة الشحن</th><td>@LastQueryResults.RechargeAmount</td></tr>
+                        <tr><th>مرجع الاستعلام</th><td>@LastQueryResults.QueryRef</td></tr>
+                        <tr><th>التاريخ</th><td>@LastQueryResults.Timestamp.ToLocalTime()</td></tr>
+                    </tbody>
+                </table>
+
+                @if (LastQueryResults.AdjustmentsDetails?.Any() == true)
+                {
+                    <h6 class="mt-3">تفاصيل الخصومات</h6>
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>الخصم</th>
+                                <th>المتبقي</th>
+                                <th>القيمة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in LastQueryResults.AdjustmentsDetails)
+                            {
+                                <tr>
+                                    <td>@a.AdjustmentName</td>
+                                    <td>@a.AdjustmentRemains</td>
+                                    <td>@a.AdjustmentValue</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+                <div class="d-flex gap-2 justify-content-end mt-3">
+                    <button class="btn btn-primary"
+                            @onclick="OnProcessPaymentClicked"
+                            disabled="@PaymentLoading">
+                        @if (PaymentLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm"></span>
+                            <span class="ms-2">جارٍ المعالجة...</span>
+                        }
+                        else
+                        {
+                            <span>تنفيذ الدفع</span>
+                        }
+                    </button>
+
+                    <button class="btn btn-secondary" @onclick="ResetForm">إعادة تعيين</button>
+                </div>
+            }
+        </div>
+    }
+
+    @if (LastPaymentResult != null)
+    {
+        <div class="card p-3 mb-3 shadow-sm">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5>نتيجة الدفع</h5>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="ClosePaymentResult">
+                    ✕ إغلاق
                 </button>
             </div>
-        </div>
-
-        @if (!string.IsNullOrEmpty(FormError))
-        {
-            <div class="alert alert-danger mt-3 text-end">@FormError</div>
-        }
-    </EditForm>
-</div>
-
-@if (LastQueryResults != null)
-{
-    <div class="card p-3 mb-3 shadow-sm text-end">
-        <h5>نتائج الاستعلام</h5>
-        @if (!LastQueryResults.Success)
-        {
-            <div class="alert alert-warning text-end">فشل الاستعلام أو لا توجد بيانات.</div>
-        }
-        else
-        {
-            <table class="table table-sm text-end">
-                <tbody>
-                    <tr><th>الاسم</th><td>@LastQueryResults.CustomerName</td></tr>
-                    <tr><th>رقم العداد</th><td>@LastQueryResults.MeterNumber</td></tr>
-                    <tr><th>رقم الحساب</th><td>@LastQueryResults.AccountNumber</td></tr>
-                    <tr><th>الاستهلاك</th><td>@LastQueryResults.AccountUsed</td></tr>
-                    <tr><th>الخصومات</th><td>@LastQueryResults.Adjustments</td></tr>
-                    <tr><th>قيمة الشحن</th><td>@LastQueryResults.RechargeAmount</td></tr>
-                    <tr><th>مرجع الاستعلام</th><td>@LastQueryResults.QueryRef</td></tr>
-                    <tr><th>التاريخ</th><td>@LastQueryResults.Timestamp.ToLocalTime()</td></tr>
-                </tbody>
-            </table>
-
-            @if (LastQueryResults.AdjustmentsDetails?.Any() == true)
+            @if (!LastPaymentResult.Success)
             {
-                <h6>تفاصيل الخصومات</h6>
-                <table class="table table-bordered table-sm text-end">
-                    <thead>
-                        <tr>
-                            <th>الخصم</th>
-                            <th>المتبقي</th>
-                            <th>القيمة</th>
-                        </tr>
-                    </thead>
+                <div class="alert alert-danger">فشل في عملية الدفع.</div>
+            }
+            else
+            {
+                <table class="table table-sm">
                     <tbody>
-                        @foreach (var a in LastQueryResults.AdjustmentsDetails)
-                        {
-                            <tr>
-                                <td>@a.AdjustmentName</td>
-                                <td>@a.AdjustmentRemains</td>
-                                <td>@a.AdjustmentValue</td>
-                            </tr>
-                        }
+                        <tr><th>رقم العداد</th><td>@LastPaymentResult.MeterNumber</td></tr>
+                        <tr><th>الاسم</th><td>@LastPaymentResult.CustomerName</td></tr>
+                        <tr><th>المبلغ المدفوع</th><td>@LastPaymentResult.AmountPaid</td></tr>
+                        <tr><th>الوحدات المضافة</th><td>@LastPaymentResult.UnitsAdded</td></tr>
+                        <tr><th>الرمز</th><td>@LastPaymentResult.Token</td></tr>
+                        <tr><th>المرجع</th><td>@LastPaymentResult.ReferenceNumber</td></tr>
+                        <tr><th>التاريخ</th><td>@LastPaymentResult.Timestamp.ToLocalTime()</td></tr>
                     </tbody>
                 </table>
             }
-
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-primary"
-                        @onclick="OnProcessPaymentClicked"
-                        disabled="@PaymentLoading">
-                    @if (PaymentLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm"></span>
-                        <span class="ms-2">جارٍ المعالجة...</span>
-                    }
-                    else
-                    {
-                        <span>تنفيذ الدفع</span>
-                    }
-                </button>
-
-                <button class="btn btn-secondary" @onclick="ResetForm">إعادة تعيين</button>
-            </div>
-        }
-    </div>
-}
-
-@if (LastPaymentResult != null)
-{
-    <div class="card p-3 mb-3 shadow-sm text-end">
-        <h5>نتيجة الدفع</h5>
-        @if (!LastPaymentResult.Success)
-        {
-            <div class="alert alert-danger text-end">فشل في عملية الدفع.</div>
-        }
-        else
-        {
-            <table class="table table-sm text-end">
-                <tbody>
-                    <tr><th>رقم العداد</th><td>@LastPaymentResult.MeterNumber</td></tr>
-                    <tr><th>الاسم</th><td>@LastPaymentResult.CustomerName</td></tr>
-                    <tr><th>المبلغ المدفوع</th><td>@LastPaymentResult.AmountPaid</td></tr>
-                    <tr><th>الوحدات المضافة</th><td>@LastPaymentResult.UnitsAdded</td></tr>
-                    <tr><th>الرمز</th><td>@LastPaymentResult.Token</td></tr>
-                    <tr><th>المرجع</th><td>@LastPaymentResult.ReferenceNumber</td></tr>
-                    <tr><th>التاريخ</th><td>@LastPaymentResult.Timestamp.ToLocalTime()</td></tr>
-                </tbody>
-            </table>
-        }
-    </div>
-}
-
-@if (RecentQueries?.Count > 0)
-{
-    <div class="card p-3 shadow-sm text-end">
-        <h6>الاستعلامات الأخيرة</h6>
-        <ul class="list-group list-group-flush text-end">
-            @foreach (var q in RecentQueries)
-            {
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div class="text-end flex-fill">
-                        <strong>@q.MeterNo</strong> — @q.Amount
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary" @onclick="() => LoadRecent(q)">تحميل</button>
-                </li>
-            }
-        </ul>
-    </div>
-}
-
-@code {
-    private MeterQueryRequest Request { get; set; } = new();
-    private MeterQueryResponse? LastQueryResults;
-    private PaymentResponse? LastPaymentResult;
-    private string? FormError;
-    private string? MeterNoError;
-    private string? AmountError;
-    private bool IsLoading;
-    private bool PaymentLoading;
-    private List<MeterQueryRequest> RecentQueries { get; set; } = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadRecentFromLocalStorage();
+        </div>
     }
 
-    private async Task OnSubmitClicked() => await OnSubmit();
-
-    private async Task OnSubmit()
+    @if (RecentQueries?.Count > 0)
     {
-        ClearErrors();
-        var validation = await Validator.ValidateAsync(Request);
-        if (!validation.IsValid)
-        {
-            foreach (var e in validation.Errors)
-            {
-                if (e.PropertyName == nameof(Request.MeterNo))
-                    MeterNoError = e.ErrorMessage;
-                else if (e.PropertyName == nameof(Request.Amount))
-                    AmountError = e.ErrorMessage;
-                else
-                    FormError = "يوجد خطأ في النموذج، يرجى التحقق من البيانات.";    
-            }
-            return;
-        }
-
-        IsLoading = true;
-        StateHasChanged();
-
-        try
-        {
-            LastQueryResults = await ElectricMeterService.QueryMeterAsync(Request);
-            if (LastQueryResults?.Success == true)
-                await AddToRecent(Request);
-            else
-                FormError = "فشل الاستعلام، يرجى التحقق من رقم العداد.";
-        }
-        catch
-        {
-            FormError = "حدث خطأ أثناء الاستعلام، يرجى المحاولة لاحقًا.";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        <div class="card p-3 shadow-sm">
+            <h6>الاستعلامات الأخيرة</h6>
+            <ul class="list-group list-group-flush">
+                @foreach (var q in RecentQueries)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="flex-fill">
+                            <strong>@q.MeterNo</strong> — @q.Amount
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => LoadRecent(q)">تحميل</button>
+                    </li>
+                }
+            </ul>
+        </div>
     }
-
-    private async Task OnProcessPaymentClicked()
-    {
-        if (LastQueryResults == null)
-            return;
-
-        bool confirm = await JS.InvokeAsync<bool>("confirm", $"هل تريد تأكيد دفع {Request.Amount} للعداد {Request.MeterNo}؟");
-        if (!confirm)
-            return;
-
-        PaymentLoading = true;
-        StateHasChanged();
-
-        try
-        {
-            LastPaymentResult = await ElectricMeterService.ProcessPaymentAsync(Request);
-            if (LastPaymentResult?.Success == true)
-                await ResetFormAfterPayment();
-            else
-                FormError = "فشل الدفع، يرجى المحاولة مرة أخرى.";
-        }
-        catch
-        {
-            FormError = "حدث خطأ أثناء عملية الدفع، يرجى المحاولة لاحقًا.";
-        }
-        finally
-        {
-            PaymentLoading = false;
-        }
-    }
-
-    private void ClearErrors()
-    {
-        FormError = MeterNoError = AmountError = null;
-    }
-
-    private async Task ResetFormAfterPayment()
-    {
-        Request = new();
-        LastQueryResults = null;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private void ResetForm()
-    {
-        Request = new();
-        LastQueryResults = null;
-        LastPaymentResult = null;
-        ClearErrors();
-    }
-
-    private void OnMeterInput(ChangeEventArgs e)
-    {
-        var raw = e.Value?.ToString() ?? string.Empty;
-        var digits = new string(raw.Where(char.IsDigit).ToArray());
-        if (digits.Length > 13)
-            digits = digits.Substring(0, 13);
-        Request.MeterNo = digits;
-    }
-
-    private async Task AddToRecent(MeterQueryRequest req)
-    {
-        var copy = new MeterQueryRequest { MeterNo = req.MeterNo, Amount = req.Amount };
-        RecentQueries.RemoveAll(r => r.MeterNo == copy.MeterNo && r.Amount == copy.Amount);
-        RecentQueries.Insert(0, copy);
-        if (RecentQueries.Count > 5)
-            RecentQueries.RemoveAt(5);
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", "recent_meter_queries",
-                System.Text.Json.JsonSerializer.Serialize(RecentQueries));
-        }
-        catch { }
-    }
-
-    private async Task LoadRecentFromLocalStorage()
-    {
-        try
-        {
-            var json = await JS.InvokeAsync<string?>("localStorage.getItem", "recent_meter_queries");
-            if (!string.IsNullOrEmpty(json))
-                RecentQueries = System.Text.Json.JsonSerializer.Deserialize<List<MeterQueryRequest>>(json) ?? new();
-        }
-        catch
-        {
-            RecentQueries = new();
-        }
-    }
-
-    private void LoadRecent(MeterQueryRequest q)
-    {
-        Request = new() { MeterNo = q.MeterNo, Amount = q.Amount };
-        LastQueryResults = null;
-        LastPaymentResult = null;
-    }
-}
+</div>

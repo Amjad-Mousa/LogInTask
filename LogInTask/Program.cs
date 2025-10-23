@@ -16,6 +16,7 @@ builder.Services.AddScoped<IElectricMeterService, ElectricMeterService>();
 builder.Services.AddScoped<IValidator<MeterQueryRequest>, MeterQueryRequestValidator>();
 
 builder.Services.AddScoped<HttpClient>();
+builder.Services.AddScoped<IValidator<MeterQueryRequest>, MeterQueryRequestValidator>();
 
 var app = builder.Build();
 
