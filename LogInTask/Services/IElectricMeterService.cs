@@ -4,7 +4,7 @@ namespace LogInTask.Services
 {
     public interface IElectricMeterService
     {
-       public MeterQueryResponse QueryMeterAsync(MeterQueryRequest request);
-       public MeterQueryResponse ProcessPaymentAsync(MeterQueryRequest request);
+        Task<MeterQueryResponse> QueryMeterAsync(MeterQueryRequest request);
+        Task<PaymentResponse> ProcessPaymentAsync(MeterQueryRequest request);
     }
 }

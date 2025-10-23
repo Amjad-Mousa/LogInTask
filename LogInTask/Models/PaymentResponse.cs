@@ -2,17 +2,16 @@
 {
     public class PaymentResponse
     {
-        bool IsSuccessful { get; set; } 
-        public string? MeterNo { get; set; }    
-        public string? CustomerName { get; set; }
-        public string? AccountNo { get; set; }  
-        public string? Token { get; set; }
-        public string? ReferenceNo { get; set; }
-        public string? AccountUsed { get; set; }
-        public decimal PaidAmount { get; set; }
+        public bool Success { get; set; }
+        public string MeterNumber { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public decimal AccountNumber { get; set; }
+        public string Token { get; set; } = string.Empty;
+        public string ReferenceNumber { get; set; } = string.Empty;
+        public string AccountUsed { get; set; } = string.Empty;
+        public decimal AmountPaid { get; set; }
         public decimal UnitsAdded { get; set; }
-        public DateTime TimeStamp { get; set; } = DateTime.Now;
-
+        public DateTime Timestamp { get; set; }
     }
 
 }
